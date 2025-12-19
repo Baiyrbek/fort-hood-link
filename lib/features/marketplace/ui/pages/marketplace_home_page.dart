@@ -45,7 +45,7 @@ class MarketplaceHomePage extends StatelessWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.68,
                 ),
                 itemCount: state.listings.length,
                 itemBuilder: (context, index) {
