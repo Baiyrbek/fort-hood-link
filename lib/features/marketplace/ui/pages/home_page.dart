@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../di/marketplace_dependencies.dart';
+import '../../bloc/marketplace_event.dart';
 import 'marketplace_home_page.dart';
 import 'sell_page.dart';
 import 'profile_page.dart';
@@ -13,17 +16,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    MarketplaceHomePage(),
-    SellPage(),
-    ProfilePage(),
-  ];
+  List<Widget> get _pages => [
+        const MarketplaceHomePage(),
+        SellPage(
+          onPosted: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        ),
+        const ProfilePage(),
+      ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
+    return BlocProvider(
+      create: (_) => MarketplaceDependencies.createBloc()
+        ..add(const LoadListings()),
+      child: Scaffold(
+        body: _pages[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
@@ -44,6 +56,7 @@ class _HomePageState extends State<HomePage> {
             label: 'Me',
           ),
         ],
+      ),
       ),
     );
   }

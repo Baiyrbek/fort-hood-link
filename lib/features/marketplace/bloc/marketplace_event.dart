@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../data/models/listing.dart';
 
 abstract class MarketplaceEvent extends Equatable {
   const MarketplaceEvent();
@@ -27,4 +28,13 @@ class CategorySelected extends MarketplaceEvent {
 
   @override
   List<Object?> get props => [category];
+}
+
+class CreateListing extends MarketplaceEvent {
+  final Listing listing;
+
+  const CreateListing(this.listing);
+
+  @override
+  List<Object?> get props => [listing];
 }

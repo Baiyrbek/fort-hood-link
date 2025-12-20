@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/marketplace_bloc.dart';
 import '../../bloc/marketplace_event.dart';
 import '../../bloc/marketplace_state.dart';
-import '../../../../di/marketplace_dependencies.dart';
 import '../widgets/listing_card.dart';
 
 class MarketplaceHomePage extends StatefulWidget {
@@ -32,9 +31,14 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => MarketplaceDependencies.createBloc()
-        ..add(const LoadListings()),
+    return BlocListener<MarketplaceBloc, MarketplaceState>(
+      listenWhen: (previous, current) => previous.query != current.query,
+      listener: (context, state) {
+        // Sync search controller with bloc state
+        if (_searchController.text != state.query) {
+          _searchController.text = state.query;
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Home'),

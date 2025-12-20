@@ -16,6 +16,7 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<LoadListings>(_onLoadListings);
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<CategorySelected>(_onCategorySelected);
+    on<CreateListing>(_onCreateListing);
   }
 
   Future<void> _onLoadListings(
@@ -77,6 +78,25 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     emit(state.copyWith(
       selectedCategory: event.category,
       visibleListings: filteredListings,
+    ));
+  }
+
+  void _onCreateListing(
+    CreateListing event,
+    Emitter<MarketplaceState> emit,
+  ) {
+    final updatedListings = [event.listing, ...state.allListings];
+    // Reset filters to show all listings, ensuring new listing is visible
+    final filteredListings = _filterListings(
+      updatedListings,
+      '',
+      null,
+    );
+    emit(state.copyWith(
+      allListings: updatedListings,
+      visibleListings: filteredListings,
+      query: '',
+      selectedCategory: null,
     ));
   }
 
