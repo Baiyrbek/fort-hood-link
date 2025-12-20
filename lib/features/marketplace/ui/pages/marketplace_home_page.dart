@@ -75,6 +75,8 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     itemCount: _categories.length,
                     itemBuilder: (context, index) {
                       final category = _categories[index];
+                      // "All" is selected when selectedCategory is null
+                      // Other categories are selected when selectedCategory matches
                       final isSelected = category == 'All'
                           ? state.selectedCategory == null
                           : state.selectedCategory == category;
@@ -84,7 +86,9 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         child: FilterChip(
                           label: Text(category),
                           selected: isSelected,
-                          onSelected: (selected) {
+                          onSelected: (_) {
+                            // Always dispatch the event when chip is tapped
+                            // "All" dispatches null, others dispatch the category name
                             context.read<MarketplaceBloc>().add(
                                   CategorySelected(
                                     category == 'All' ? null : category,

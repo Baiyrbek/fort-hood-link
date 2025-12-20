@@ -18,12 +18,14 @@ class MarketplaceState extends Equatable {
     this.errorMessage,
   });
 
+  static const Object _unset = Object();
+
   MarketplaceState copyWith({
     bool? loading,
     List<Listing>? allListings,
     List<Listing>? visibleListings,
     String? query,
-    String? selectedCategory,
+    Object? selectedCategory = _unset,
     String? errorMessage,
   }) {
     return MarketplaceState(
@@ -31,7 +33,9 @@ class MarketplaceState extends Equatable {
       allListings: allListings ?? this.allListings,
       visibleListings: visibleListings ?? this.visibleListings,
       query: query ?? this.query,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedCategory: selectedCategory == _unset
+          ? this.selectedCategory
+          : selectedCategory as String?,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
