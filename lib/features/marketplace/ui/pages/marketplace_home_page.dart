@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/marketplace_bloc.dart';
@@ -28,9 +29,16 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
     'Cars',
   ];
   int? _lastKnownCount;
+  Timer? _debounce;
+
+  void _clearSearch() {
+    _searchController.clear();
+    context.read<MarketplaceBloc>().add(const SearchQueryChanged(''));
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -86,25 +94,38 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search items...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+            BlocBuilder<MarketplaceBloc, MarketplaceState>(
+              builder: (context, state) {
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search items...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: state.query.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: _clearSearch,
+                            )
+                          : null,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      _debounce?.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 200), () {
+                        context.read<MarketplaceBloc>().add(
+                              SearchQueryChanged(value),
+                            );
+                      });
+                    },
                   ),
-                ),
-                onChanged: (value) {
-                  context.read<MarketplaceBloc>().add(
-                        SearchQueryChanged(value),
-                      );
-                },
-              ),
+                );
+              },
             ),
             BlocBuilder<MarketplaceBloc, MarketplaceState>(
               builder: (context, state) {
@@ -211,9 +232,11 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text(
-                                'Try changing search or category.',
-                                style: TextStyle(
+                              Text(
+                                state.query.trim().isNotEmpty
+                                    ? 'No results for "${state.query}"'
+                                    : 'Try changing search or category.',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
