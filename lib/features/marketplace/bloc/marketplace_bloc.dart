@@ -82,10 +82,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     ));
   }
 
-  void _onCreateListing(
+  Future<void> _onCreateListing(
     CreateListing event,
     Emitter<MarketplaceState> emit,
-  ) {
+  ) async {
     final updatedListings = [event.listing, ...state.allListings];
     // Reset filters to show all listings, ensuring new listing is visible
     final filteredListings = _filterListings(
@@ -99,12 +99,14 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       query: '',
       selectedCategory: null,
     ));
+    // Persist to SharedPreferences
+    await repository.saveListings(updatedListings);
   }
 
-  void _onDeleteListing(
+  Future<void> _onDeleteListing(
     DeleteListing event,
     Emitter<MarketplaceState> emit,
-  ) {
+  ) async {
     final updatedListings = state.allListings
         .where((listing) => listing.id != event.id)
         .toList();
@@ -117,6 +119,8 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       allListings: updatedListings,
       visibleListings: filteredListings,
     ));
+    // Persist to SharedPreferences
+    await repository.saveListings(updatedListings);
   }
 
   List<Listing> _filterListings(

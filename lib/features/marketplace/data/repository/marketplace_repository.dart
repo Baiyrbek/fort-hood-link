@@ -1,9 +1,11 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/listing.dart';
 
 class MarketplaceRepository {
-  Future<List<Listing>> fetchListings() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  static const String _key = 'marketplace_listings_v1';
 
+  List<Listing> _getSeedListings() {
     return [
       Listing(
         id: '1',
@@ -117,5 +119,29 @@ class MarketplaceRepository {
       ),
     ];
   }
-}
 
+  Future<List<Listing>> fetchListings() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_key);
+
+    if (jsonString == null || jsonString.isEmpty) {
+      // First run: use seed listings, save them, and return
+      final seedListings = _getSeedListings();
+      await saveListings(seedListings);
+      return seedListings;
+    }
+
+    // Load from SharedPreferences
+    final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
+    return jsonList.map((json) => Listing.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveListings(List<Listing> listings) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = listings.map((listing) => listing.toJson()).toList();
+    final jsonString = jsonEncode(jsonList);
+    await prefs.setString(_key, jsonString);
+  }
+}
