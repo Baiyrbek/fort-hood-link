@@ -84,13 +84,13 @@ class _ProfilePageState extends State<ProfilePage> {
               _previousListingCount = myListings.length;
             }
 
-            if (myListings.isEmpty) {
+            if (!state.loading && myListings.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'No listings',
+                      'No listings yet',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Your posts will appear here.',
+                      'Items you post will appear here.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
