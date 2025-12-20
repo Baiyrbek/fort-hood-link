@@ -64,6 +64,7 @@ class _SellPageState extends State<SellPage> {
       location: _locationController.text.trim(),
       images: ['https://picsum.photos/400?random=$id'],
       createdAt: DateTime.now(),
+      ownerId: 'local-user',
     );
 
     context.read<MarketplaceBloc>().add(CreateListing(listing));

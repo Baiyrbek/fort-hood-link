@@ -14,6 +14,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=1'],
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '2',
@@ -24,6 +25,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=2'],
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '3',
@@ -34,6 +36,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=3'],
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '4',
@@ -44,6 +47,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=4'],
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '5',
@@ -54,6 +58,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=5'],
         createdAt: DateTime.now().subtract(const Duration(days: 4)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '6',
@@ -64,6 +69,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=6'],
         createdAt: DateTime.now().subtract(const Duration(days: 6)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '7',
@@ -74,6 +80,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=7'],
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '8',
@@ -84,6 +91,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=8'],
         createdAt: DateTime.now().subtract(const Duration(days: 8)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '9',
@@ -94,6 +102,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=9'],
         createdAt: DateTime.now().subtract(const Duration(days: 9)),
+        ownerId: 'seed',
       ),
       Listing(
         id: '10',
@@ -104,6 +113,7 @@ class MarketplaceRepository {
         location: 'Fort Hood, TX',
         images: ['https://picsum.photos/400?random=10'],
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        ownerId: 'seed',
       ),
     ];
   }

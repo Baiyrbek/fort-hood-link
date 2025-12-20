@@ -17,6 +17,7 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<SearchQueryChanged>(_onSearchQueryChanged);
     on<CategorySelected>(_onCategorySelected);
     on<CreateListing>(_onCreateListing);
+    on<DeleteListing>(_onDeleteListing);
   }
 
   Future<void> _onLoadListings(
@@ -97,6 +98,24 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       visibleListings: filteredListings,
       query: '',
       selectedCategory: null,
+    ));
+  }
+
+  void _onDeleteListing(
+    DeleteListing event,
+    Emitter<MarketplaceState> emit,
+  ) {
+    final updatedListings = state.allListings
+        .where((listing) => listing.id != event.id)
+        .toList();
+    final filteredListings = _filterListings(
+      updatedListings,
+      state.query,
+      state.selectedCategory,
+    );
+    emit(state.copyWith(
+      allListings: updatedListings,
+      visibleListings: filteredListings,
     ));
   }
 

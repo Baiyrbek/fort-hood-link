@@ -7,6 +7,7 @@ class Listing {
   final String location;
   final List<String> images;
   final DateTime createdAt;
+  final String ownerId;
 
   Listing({
     required this.id,
@@ -17,6 +18,7 @@ class Listing {
     required this.location,
     required this.images,
     required this.createdAt,
+    required this.ownerId,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Listing {
       location: json['location'] as String,
       images: List<String>.from(json['images'] as List),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      ownerId: json['ownerId'] as String,
     );
   }
 
@@ -42,6 +45,7 @@ class Listing {
       'location': location,
       'images': images,
       'createdAt': createdAt.toIso8601String(),
+      'ownerId': ownerId,
     };
   }
 }

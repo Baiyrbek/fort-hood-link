@@ -38,3 +38,12 @@ class CreateListing extends MarketplaceEvent {
   @override
   List<Object?> get props => [listing];
 }
+
+class DeleteListing extends MarketplaceEvent {
+  final String id;
+
+  const DeleteListing(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}
