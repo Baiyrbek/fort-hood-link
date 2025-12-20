@@ -76,6 +76,12 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         body: BlocBuilder<MarketplaceBloc, MarketplaceState>(
           builder: (context, state) {
+            if (state.loading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
             final myListings = state.allListings
                 .where((listing) => listing.ownerId == 'local-user')
                 .toList();
@@ -84,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _previousListingCount = myListings.length;
             }
 
-            if (!state.loading && myListings.isEmpty) {
+            if (myListings.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -98,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Items you post will appear here.',
+                      'Your posts will show up here.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,

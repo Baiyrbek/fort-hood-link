@@ -44,8 +44,8 @@ class _SellPageState extends State<SellPage> {
 
   bool _isFormValid() {
     final title = _titleController.text.trim();
-    final priceText = _priceController.text.trim();
-    final price = int.tryParse(priceText);
+    final priceText = _priceController.text.trim().replaceAll(RegExp(r'[,\s]'), '');
+    final price = double.tryParse(priceText);
     
     return title.isNotEmpty &&
         price != null &&
@@ -59,11 +59,12 @@ class _SellPageState extends State<SellPage> {
     }
 
     final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final priceText = _priceController.text.trim().replaceAll(RegExp(r'[,\s]'), '');
     final listing = Listing(
       id: id,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
-      price: int.parse(_priceController.text.trim()),
+      price: double.parse(priceText).toInt(),
       category: _selectedCategory!,
       location: _locationController.text.trim(),
       images: ['https://picsum.photos/400?random=$id'],
@@ -112,6 +113,9 @@ class _SellPageState extends State<SellPage> {
                   textInputAction: TextInputAction.next,
                   autofocus: true,
                   onChanged: (_) => setState(() {}),
+                  onFieldSubmitted: (_) {
+                    FocusScope.of(context).nextFocus();
+                  },
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a title';
@@ -150,7 +154,8 @@ class _SellPageState extends State<SellPage> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a price';
                     }
-                    final price = int.tryParse(value.trim());
+                    final priceText = value.trim().replaceAll(RegExp(r'[,\s]'), '');
+                    final price = double.tryParse(priceText);
                     if (price == null || price <= 0) {
                       return 'Please enter a valid price';
                     }
