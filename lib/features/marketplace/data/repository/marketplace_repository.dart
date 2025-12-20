@@ -133,9 +133,21 @@ class MarketplaceRepository {
       return seedListings;
     }
 
-    // Load from SharedPreferences
-    final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
-    return jsonList.map((json) => Listing.fromJson(json as Map<String, dynamic>)).toList();
+    // Load from SharedPreferences with error handling
+    try {
+      final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
+      final listings = jsonList
+          .map((json) => Listing.fromJson(json as Map<String, dynamic>))
+          .toList();
+      // Sort by createdAt descending (newest first)
+      listings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return listings;
+    } catch (e) {
+      // If decode fails, reset to seed listings
+      final seedListings = _getSeedListings();
+      await saveListings(seedListings);
+      return seedListings;
+    }
   }
 
   Future<void> saveListings(List<Listing> listings) async {
@@ -143,5 +155,10 @@ class MarketplaceRepository {
     final jsonList = listings.map((listing) => listing.toJson()).toList();
     final jsonString = jsonEncode(jsonList);
     await prefs.setString(_key, jsonString);
+  }
+
+  Future<void> clearListings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
   }
 }

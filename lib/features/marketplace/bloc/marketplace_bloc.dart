@@ -18,6 +18,7 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<CategorySelected>(_onCategorySelected);
     on<CreateListing>(_onCreateListing);
     on<DeleteListing>(_onDeleteListing);
+    on<ClearLocalListings>(_onClearLocalListings);
   }
 
   Future<void> _onLoadListings(
@@ -121,6 +122,24 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     ));
     // Persist to SharedPreferences
     await repository.saveListings(updatedListings);
+  }
+
+  Future<void> _onClearLocalListings(
+    ClearLocalListings event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    await repository.clearListings();
+    // Reload listings (will fetch seed listings after clear)
+    final listings = await repository.fetchListings();
+    final filteredListings = _filterListings(
+      listings,
+      state.query,
+      state.selectedCategory,
+    );
+    emit(state.copyWith(
+      allListings: listings,
+      visibleListings: filteredListings,
+    ));
   }
 
   List<Listing> _filterListings(

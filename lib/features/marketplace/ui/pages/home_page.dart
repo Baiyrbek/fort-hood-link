@@ -16,8 +16,16 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
+  void switchToSellTab() {
+    setState(() {
+      _currentIndex = 1;
+    });
+  }
+
   List<Widget> get _pages => [
-        const MarketplaceHomePage(),
+        MarketplaceHomePage(
+          onNavigateToSell: switchToSellTab,
+        ),
         SellPage(
           onPosted: () {
             setState(() {

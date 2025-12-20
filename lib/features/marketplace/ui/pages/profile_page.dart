@@ -4,8 +4,15 @@ import '../../bloc/marketplace_bloc.dart';
 import '../../bloc/marketplace_event.dart';
 import '../../bloc/marketplace_state.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  int? _previousListingCount;
 
   void _handleDelete(BuildContext context, String listingId) {
     showDialog(
@@ -32,21 +39,75 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Me'),
-      ),
-      body: BlocBuilder<MarketplaceBloc, MarketplaceState>(
-        builder: (context, state) {
-          final myListings = state.allListings
-              .where((listing) => listing.ownerId == 'local-user')
-              .toList();
+    return BlocListener<MarketplaceBloc, MarketplaceState>(
+      listenWhen: (previous, current) {
+        final previousMyCount = previous.allListings
+            .where((l) => l.ownerId == 'local-user')
+            .length;
+        final currentMyCount = current.allListings
+            .where((l) => l.ownerId == 'local-user')
+            .length;
+        return previousMyCount != currentMyCount && _previousListingCount != null;
+      },
+      listener: (context, state) {
+        final previousMyCount = _previousListingCount ?? 0;
+        final currentMyCount = state.allListings
+            .where((l) => l.ownerId == 'local-user')
+            .length;
 
-          if (myListings.isEmpty) {
-            return const Center(
-              child: Text('You have no listings yet'),
-            );
-          }
+        if (currentMyCount < previousMyCount) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Listing deleted')),
+          );
+        }
+        _previousListingCount = currentMyCount;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Me'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.read<MarketplaceBloc>().add(const ClearLocalListings());
+              },
+              child: const Text('Clear'),
+            ),
+          ],
+        ),
+        body: BlocBuilder<MarketplaceBloc, MarketplaceState>(
+          builder: (context, state) {
+            final myListings = state.allListings
+                .where((listing) => listing.ownerId == 'local-user')
+                .toList();
+
+            if (_previousListingCount == null) {
+              _previousListingCount = myListings.length;
+            }
+
+            if (myListings.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'No listings',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Your posts will appear here.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
           return ListView.builder(
             padding: const EdgeInsets.all(12),
@@ -88,6 +149,7 @@ class ProfilePage extends StatelessWidget {
             },
           );
         },
+        ),
       ),
     );
   }

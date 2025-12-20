@@ -6,7 +6,12 @@ import '../../bloc/marketplace_state.dart';
 import '../widgets/listing_card.dart';
 
 class MarketplaceHomePage extends StatefulWidget {
-  const MarketplaceHomePage({super.key});
+  final VoidCallback? onNavigateToSell;
+
+  const MarketplaceHomePage({
+    super.key,
+    this.onNavigateToSell,
+  });
 
   @override
   State<MarketplaceHomePage> createState() => _MarketplaceHomePageState();
@@ -22,6 +27,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
     'Sports',
     'Cars',
   ];
+  int? _lastKnownCount;
 
   @override
   void dispose() {
@@ -32,14 +38,49 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<MarketplaceBloc, MarketplaceState>(
-      listenWhen: (previous, current) => previous.query != current.query,
-      listener: (context, state) {
-        // Sync search controller with bloc state
-        if (_searchController.text != state.query) {
-          _searchController.text = state.query;
+      listenWhen: (previous, current) {
+        if (previous.query != current.query) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _searchController.text != current.query) {
+              _searchController.text = current.query;
+            }
+          });
         }
+        return false;
       },
-      child: Scaffold(
+      listener: (context, state) {},
+      child: BlocConsumer<MarketplaceBloc, MarketplaceState>(
+        listenWhen: (previous, current) {
+          if (previous.loading && !current.loading) {
+            return false;
+          }
+          final prevCount = previous.allListings.length;
+          final currCount = current.allListings.length;
+          return prevCount != currCount && _lastKnownCount != null;
+        },
+        listener: (context, state) {
+          if (_lastKnownCount == null) {
+            _lastKnownCount = state.allListings.length;
+            return;
+          }
+          
+          final prevCount = _lastKnownCount!;
+          final currCount = state.allListings.length;
+          
+          if (currCount > prevCount) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Listing posted')),
+            );
+          } else if (currCount < prevCount) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Listing deleted')),
+            );
+          }
+          
+          _lastKnownCount = currCount;
+        },
+        builder: (context, state) {
+          return Scaffold(
         appBar: AppBar(
           title: const Text('Home'),
         ),
@@ -110,6 +151,10 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                       child: CircularProgressIndicator(),
                     );
                   }
+                  
+                  if (_lastKnownCount == null && !state.loading) {
+                    _lastKnownCount = state.allListings.length;
+                  }
 
                   if (state.errorMessage != null) {
                     return Center(
@@ -117,10 +162,79 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     );
                   }
 
-                  if (state.visibleListings.isEmpty) {
-                    return const Center(
-                      child: Text('No listings found'),
-                    );
+                  if (state.visibleListings.isEmpty ) {
+                    if (state.allListings.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'No listings yet',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Be the first to post something.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: widget.onNavigateToSell,
+                                child: const Text('Create listing'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Nothing found',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Try changing search or category.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              OutlinedButton(
+                                onPressed: () {
+                                  context.read<MarketplaceBloc>().add(
+                                        const SearchQueryChanged(''),
+                                      );
+                                  context.read<MarketplaceBloc>().add(
+                                        const CategorySelected(null),
+                                      );
+                                },
+                                child: const Text('Clear filters'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                   }
 
                   return Padding(
@@ -145,6 +259,8 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
             ),
           ],
         ),
+          );
+        },
       ),
     );
   }

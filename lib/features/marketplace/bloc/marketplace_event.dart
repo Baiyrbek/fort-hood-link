@@ -47,3 +47,7 @@ class DeleteListing extends MarketplaceEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class ClearLocalListings extends MarketplaceEvent {
+  const ClearLocalListings();
+}

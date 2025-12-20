@@ -43,13 +43,53 @@ class _SellPageState extends State<SellPage> {
   }
 
   void _handlePost() {
-    if (!_formKey.currentState!.validate()) {
+    // Validate title
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title is required')),
+      );
       return;
     }
 
+    // Validate price
+    final priceText = _priceController.text.trim();
+    if (priceText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Price is required')),
+      );
+      return;
+    }
+    final price = int.tryParse(priceText);
+    if (price == null || price <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Price must be greater than 0')),
+      );
+      return;
+    }
+
+    // Validate category
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
+        const SnackBar(content: Text('Select a category')),
+      );
+      return;
+    }
+
+    // Validate description
+    final description = _descriptionController.text.trim();
+    if (description.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Description is required')),
+      );
+      return;
+    }
+
+    // Validate location
+    final location = _locationController.text.trim();
+    if (location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location is required')),
       );
       return;
     }
@@ -57,11 +97,11 @@ class _SellPageState extends State<SellPage> {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final listing = Listing(
       id: id,
-      title: _titleController.text.trim(),
-      description: _descriptionController.text.trim(),
-      price: int.parse(_priceController.text.trim()),
+      title: title,
+      description: description,
+      price: price,
       category: _selectedCategory!,
-      location: _locationController.text.trim(),
+      location: location,
       images: ['https://picsum.photos/400?random=$id'],
       createdAt: DateTime.now(),
       ownerId: 'local-user',
@@ -77,11 +117,6 @@ class _SellPageState extends State<SellPage> {
     setState(() {
       _selectedCategory = null;
     });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Posted!')),
-    );
 
     // Navigate to home tab
     widget.onPosted?.call();
