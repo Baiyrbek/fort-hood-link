@@ -56,9 +56,20 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
     }
   }
 
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   void _clearSearch() {
     _searchController.clear();
     context.read<MarketplaceBloc>().add(const SearchQueryChanged(''));
+    _scrollToTop();
   }
 
   @override
@@ -135,6 +146,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         context.read<MarketplaceBloc>().add(
                               SearchQueryChanged(value),
                             );
+                        _scrollToTop();
                       });
                     },
                   ),
@@ -170,6 +182,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                                     category == 'All' ? null : category,
                                   ),
                                 );
+                            _scrollToTop();
                           },
                         ),
                       );
@@ -267,6 +280,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                                   context.read<MarketplaceBloc>().add(
                                         const CategorySelected(null),
                                       );
+                                  _scrollToTop();
                                 },
                                 child: const Text('Clear filters'),
                               ),
