@@ -167,7 +167,14 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
             Expanded(
               child: BlocBuilder<MarketplaceBloc, MarketplaceState>(
                 builder: (context, state) {
-                  if (state.loading) {
+                  Future<void> _onRefresh() async {
+                    context.read<MarketplaceBloc>().add(const LoadListings());
+                    await context.read<MarketplaceBloc>().stream.firstWhere(
+                      (s) => !s.loading,
+                    );
+                  }
+
+                  if (state.loading && _lastKnownCount == null) {
                     return const Center(
                       child: CircularProgressIndicator(),
                     );
@@ -177,15 +184,15 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     _lastKnownCount = state.allListings.length;
                   }
 
+                  Widget content;
+                  
                   if (state.errorMessage != null) {
-                    return Center(
+                    content = Center(
                       child: Text('Error: ${state.errorMessage}'),
                     );
-                  }
-
-                  if (state.visibleListings.isEmpty ) {
+                  } else if (state.visibleListings.isEmpty) {
                     if (state.allListings.isEmpty) {
-                      return Center(
+                      content = Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
@@ -217,7 +224,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         ),
                       );
                     } else {
-                      return Center(
+                      content = Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
@@ -258,24 +265,36 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                         ),
                       );
                     }
+                    content = SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        child: content,
+                      ),
+                    );
+                  } else {
+                    content = Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: GridView.builder(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.68,
+                        ),
+                        itemCount: state.visibleListings.length,
+                        itemBuilder: (context, index) {
+                          return ListingCard(
+                            listing: state.visibleListings[index],
+                          );
+                        },
+                      ),
+                    );
                   }
 
-                  return Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.68,
-                      ),
-                      itemCount: state.visibleListings.length,
-                      itemBuilder: (context, index) {
-                        return ListingCard(
-                          listing: state.visibleListings[index],
-                        );
-                      },
-                    ),
+                  return RefreshIndicator(
+                    onRefresh: _onRefresh,
+                    child: content,
                   );
                 },
               ),
