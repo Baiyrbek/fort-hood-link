@@ -8,6 +8,10 @@ class MarketplaceState extends Equatable {
   final String query;
   final String? selectedCategory;
   final String? errorMessage;
+  final int loadedCount;
+  final bool isLoadingMore;
+  final bool hasReachedEnd;
+  final String? toast;
 
   const MarketplaceState({
     required this.loading,
@@ -16,6 +20,10 @@ class MarketplaceState extends Equatable {
     this.query = '',
     this.selectedCategory,
     this.errorMessage,
+    this.loadedCount = 4,
+    this.isLoadingMore = false,
+    this.hasReachedEnd = false,
+    this.toast,
   });
 
   static const Object _unset = Object();
@@ -27,6 +35,10 @@ class MarketplaceState extends Equatable {
     String? query,
     Object? selectedCategory = _unset,
     String? errorMessage,
+    int? loadedCount,
+    bool? isLoadingMore,
+    bool? hasReachedEnd,
+    String? toast,
   }) {
     return MarketplaceState(
       loading: loading ?? this.loading,
@@ -37,6 +49,10 @@ class MarketplaceState extends Equatable {
           ? this.selectedCategory
           : selectedCategory as String?,
       errorMessage: errorMessage ?? this.errorMessage,
+      loadedCount: loadedCount ?? this.loadedCount,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedEnd: hasReachedEnd ?? this.hasReachedEnd,
+      toast: toast ?? this.toast,
     );
   }
 
@@ -48,5 +64,9 @@ class MarketplaceState extends Equatable {
         query,
         selectedCategory,
         errorMessage,
+        loadedCount,
+        isLoadingMore,
+        hasReachedEnd,
+        toast,
       ];
 }

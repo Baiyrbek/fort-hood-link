@@ -20,6 +20,7 @@ class MarketplaceHomePage extends StatefulWidget {
 
 class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<String> _categories = [
     'All',
     'Electronics',
@@ -28,8 +29,32 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
     'Sports',
     'Cars',
   ];
-  int? _lastKnownCount;
   Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    final pos = _scrollController.position;
+    if (pos.maxScrollExtent <= 0) {
+      return;
+    }
+
+    const threshold = 200.0;
+    if (pos.pixels >= pos.maxScrollExtent - threshold) {
+      final bloc = context.read<MarketplaceBloc>();
+      if (!bloc.state.isLoadingMore && !bloc.state.hasReachedEnd) {
+        bloc.add(const LoadMoreRequested());
+      }
+    }
+  }
 
   void _clearSearch() {
     _searchController.clear();
@@ -39,6 +64,8 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -58,41 +85,28 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
       },
       listener: (context, state) {},
       child: BlocConsumer<MarketplaceBloc, MarketplaceState>(
-        listenWhen: (previous, current) {
-          if (previous.loading && !current.loading) {
-            return false;
-          }
-          final prevCount = previous.allListings.length;
-          final currCount = current.allListings.length;
-          return prevCount != currCount && _lastKnownCount != null;
-        },
+        listenWhen: (previous, current) => previous.toast != current.toast && current.toast != null,
         listener: (context, state) {
-          if (_lastKnownCount == null) {
-            _lastKnownCount = state.allListings.length;
-            return;
-          }
-          
-          final prevCount = _lastKnownCount!;
-          final currCount = state.allListings.length;
-          
-          if (currCount > prevCount) {
+          if (state.toast == 'posted') {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Listing posted')),
             );
-          } else if (currCount < prevCount) {
+            context.read<MarketplaceBloc>().add(const ToastConsumed());
+          } else if (state.toast == 'deleted') {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Listing deleted')),
             );
+            context.read<MarketplaceBloc>().add(const ToastConsumed());
           }
-          
-          _lastKnownCount = currCount;
         },
         builder: (context, state) {
           return Scaffold(
         appBar: AppBar(
           title: const Text('Home'),
         ),
-        body: Column(
+        body: Stack(
+          children: [
+            Column(
           children: [
             BlocBuilder<MarketplaceBloc, MarketplaceState>(
               builder: (context, state) {
@@ -174,14 +188,10 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     );
                   }
 
-                  if (state.loading && _lastKnownCount == null) {
+                  if (state.loading) {
                     return const Center(
                       child: CircularProgressIndicator(),
                     );
-                  }
-                  
-                  if (_lastKnownCount == null && !state.loading) {
-                    _lastKnownCount = state.allListings.length;
                   }
 
                   Widget content;
@@ -273,19 +283,48 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                       ),
                     );
                   } else {
+                    final pagedListings = state.visibleListings
+                        .take(state.loadedCount)
+                        .toList();
+                    final itemCount = pagedListings.length +
+                        (state.isLoadingMore ? 1 : 0);
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      final bloc = context.read<MarketplaceBloc>();
+                      if (!_scrollController.hasClients) return;
+                      if (_scrollController.position.maxScrollExtent != 0) return;
+                      if (state.visibleListings.length > state.loadedCount &&
+                          !state.isLoadingMore &&
+                          !state.hasReachedEnd) {
+                        bloc.add(const LoadMoreRequested());
+                      }
+                    });
+
                     content = Padding(
                       padding: const EdgeInsets.all(12),
                       child: GridView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                           childAspectRatio: 0.68,
                         ),
-                        itemCount: state.visibleListings.length,
+                        itemCount: itemCount,
                         itemBuilder: (context, index) {
+                          final showFooter = state.isLoadingMore;
+                          if (showFooter && index == pagedListings.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
                           return ListingCard(
-                            listing: state.visibleListings[index],
+                            listing: pagedListings[index],
                           );
                         },
                       ),
@@ -297,6 +336,33 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     child: content,
                   );
                 },
+              ),
+            ),
+          ],
+        ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: BlocBuilder<MarketplaceBloc, MarketplaceState>(
+                  builder: (context, state) {
+                    return Text(
+                      'loaded: ${state.loadedCount} / visible: ${state.visibleListings.length}\n'
+                      'loadingMore: ${state.isLoadingMore}\n'
+                      'end: ${state.hasReachedEnd}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],

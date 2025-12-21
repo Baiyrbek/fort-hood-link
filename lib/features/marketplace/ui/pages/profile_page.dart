@@ -12,7 +12,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int? _previousListingCount;
 
   void _handleDelete(BuildContext context, String listingId) {
     showDialog(
@@ -40,27 +39,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<MarketplaceBloc, MarketplaceState>(
-      listenWhen: (previous, current) {
-        final previousMyCount = previous.allListings
-            .where((l) => l.ownerId == 'local-user')
-            .length;
-        final currentMyCount = current.allListings
-            .where((l) => l.ownerId == 'local-user')
-            .length;
-        return previousMyCount != currentMyCount && _previousListingCount != null;
-      },
+      listenWhen: (previous, current) => previous.toast != current.toast && current.toast == 'deleted',
       listener: (context, state) {
-        final previousMyCount = _previousListingCount ?? 0;
-        final currentMyCount = state.allListings
-            .where((l) => l.ownerId == 'local-user')
-            .length;
-
-        if (currentMyCount < previousMyCount) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Listing deleted')),
-          );
-        }
-        _previousListingCount = currentMyCount;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Listing deleted')),
+        );
+        context.read<MarketplaceBloc>().add(const ToastConsumed());
       },
       child: Scaffold(
         appBar: AppBar(
@@ -85,10 +69,6 @@ class _ProfilePageState extends State<ProfilePage> {
             final myListings = state.allListings
                 .where((listing) => listing.ownerId == 'local-user')
                 .toList();
-
-            if (_previousListingCount == null) {
-              _previousListingCount = myListings.length;
-            }
 
             if (myListings.isEmpty) {
               return const Center(

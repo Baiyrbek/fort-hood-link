@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/repository/marketplace_repository.dart';
 import '../data/models/listing.dart';
@@ -6,6 +7,7 @@ import 'marketplace_state.dart';
 
 class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   final MarketplaceRepository repository;
+  static const int _pageSize = 4;
 
   MarketplaceBloc({required this.repository})
       : super(const MarketplaceState(
@@ -19,6 +21,8 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<CreateListing>(_onCreateListing);
     on<DeleteListing>(_onDeleteListing);
     on<ClearLocalListings>(_onClearLocalListings);
+    on<LoadMoreRequested>(_onLoadMoreRequested);
+    on<ToastConsumed>(_onToastConsumed);
   }
 
   Future<void> _onLoadListings(
@@ -42,6 +46,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         loading: false,
         allListings: listings,
         visibleListings: filteredListings,
+        loadedCount: _pageSize,
+        hasReachedEnd: false,
+        isLoadingMore: false,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -49,6 +56,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         allListings: [],
         visibleListings: [],
         errorMessage: e.toString(),
+        loadedCount: _pageSize,
+        hasReachedEnd: false,
+        isLoadingMore: false,
       ));
     }
   }
@@ -65,6 +75,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     emit(state.copyWith(
       query: event.query,
       visibleListings: filteredListings,
+      loadedCount: _pageSize,
+      hasReachedEnd: false,
+      isLoadingMore: false,
     ));
   }
 
@@ -80,6 +93,9 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     emit(state.copyWith(
       selectedCategory: event.category,
       visibleListings: filteredListings,
+      loadedCount: _pageSize,
+      hasReachedEnd: false,
+      isLoadingMore: false,
     ));
   }
 
@@ -99,6 +115,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
       visibleListings: filteredListings,
       query: '',
       selectedCategory: null,
+      loadedCount: _pageSize,
+      hasReachedEnd: false,
+      isLoadingMore: false,
+      toast: 'posted',
     ));
     // Persist to SharedPreferences
     await repository.saveListings(updatedListings);
@@ -119,6 +139,10 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     emit(state.copyWith(
       allListings: updatedListings,
       visibleListings: filteredListings,
+      loadedCount: _pageSize,
+      hasReachedEnd: false,
+      isLoadingMore: false,
+      toast: 'deleted',
     ));
     // Persist to SharedPreferences
     await repository.saveListings(updatedListings);
@@ -139,7 +163,87 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     emit(state.copyWith(
       allListings: listings,
       visibleListings: filteredListings,
+      loadedCount: _pageSize,
+      hasReachedEnd: false,
+      isLoadingMore: false,
     ));
+  }
+
+  Future<void> _onLoadMoreRequested(
+    LoadMoreRequested event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    if (state.isLoadingMore) {
+      return;
+    }
+
+    final filtered = _filterListings(
+      state.allListings,
+      state.query,
+      state.selectedCategory,
+    );
+
+    emit(state.copyWith(isLoadingMore: true));
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    List<Listing> updatedAllListings = state.allListings;
+    List<Listing> updatedVisibleListings = filtered;
+
+    if (state.loadedCount >= filtered.length) {
+      final oldestCreatedAt = updatedAllListings.isEmpty
+          ? DateTime.now()
+          : updatedAllListings.map((l) => l.createdAt).reduce((a, b) => a.isBefore(b) ? a : b);
+      final newListings = _generateMoreListings(_pageSize, oldestCreatedAt);
+      updatedAllListings = [...updatedAllListings, ...newListings];
+      updatedVisibleListings = _filterListings(
+        updatedAllListings,
+        state.query,
+        state.selectedCategory,
+      );
+    }
+
+    final nextCount = min(
+      state.loadedCount + _pageSize,
+      updatedVisibleListings.length,
+    );
+
+    emit(state.copyWith(
+      allListings: updatedAllListings,
+      visibleListings: updatedVisibleListings,
+      loadedCount: nextCount,
+      isLoadingMore: false,
+      hasReachedEnd: false,
+    ));
+  }
+
+  List<Listing> _generateMoreListings(int count, DateTime startFrom) {
+    final random = Random();
+    final categories = ['Electronics', 'Furniture', 'Gaming', 'Sports', 'Cars'];
+    
+    return List.generate(count, (index) {
+      final id = (startFrom.microsecondsSinceEpoch - index).toString();
+      final category = categories[random.nextInt(categories.length)];
+      
+      return Listing(
+        id: id,
+        title: 'Item #$id',
+        description: 'Generated item in $category category',
+        price: 50 + random.nextInt(2000),
+        category: category,
+        location: 'Fort Hood, TX',
+        images: ['https://picsum.photos/400?random=$id'],
+        createdAt: startFrom.subtract(Duration(minutes: index + 1)),
+        ownerId: 'seed',
+      );
+    });
+  }
+
+  void _onToastConsumed(
+    ToastConsumed event,
+    Emitter<MarketplaceState> emit,
+  ) {
+    emit(state.copyWith(toast: null));
   }
 
   List<Listing> _filterListings(

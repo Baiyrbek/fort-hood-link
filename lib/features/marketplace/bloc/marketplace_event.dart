@@ -51,3 +51,11 @@ class DeleteListing extends MarketplaceEvent {
 class ClearLocalListings extends MarketplaceEvent {
   const ClearLocalListings();
 }
+
+class LoadMoreRequested extends MarketplaceEvent {
+  const LoadMoreRequested();
+}
+
+class ToastConsumed extends MarketplaceEvent {
+  const ToastConsumed();
+}
