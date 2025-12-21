@@ -47,7 +47,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
       return;
     }
 
-    const threshold = 200.0;
+    const threshold = 600.0;
     if (pos.pixels >= pos.maxScrollExtent - threshold) {
       final bloc = context.read<MarketplaceBloc>();
       if (!bloc.state.isLoadingMore && !bloc.state.hasReachedEnd) {
@@ -131,7 +131,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                     ),
                     onChanged: (value) {
                       _debounce?.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 200), () {
+                      _debounce = Timer(const Duration(milliseconds: 350), () {
                         context.read<MarketplaceBloc>().add(
                               SearchQueryChanged(value),
                             );
@@ -324,6 +324,7 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
                             );
                           }
                           return ListingCard(
+                            key: ValueKey(pagedListings[index].id),
                             listing: pagedListings[index],
                           );
                         },

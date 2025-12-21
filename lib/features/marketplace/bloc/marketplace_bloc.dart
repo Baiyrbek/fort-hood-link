@@ -7,7 +7,7 @@ import 'marketplace_state.dart';
 
 class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
   final MarketplaceRepository repository;
-  static const int _pageSize = 4;
+  static const int _pageSize = 20;
 
   MarketplaceBloc({required this.repository})
       : super(const MarketplaceState(

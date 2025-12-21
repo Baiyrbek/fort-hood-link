@@ -20,7 +20,7 @@ class MarketplaceState extends Equatable {
     this.query = '',
     this.selectedCategory,
     this.errorMessage,
-    this.loadedCount = 4,
+    this.loadedCount = 20,
     this.isLoadingMore = false,
     this.hasReachedEnd = false,
     this.toast,
