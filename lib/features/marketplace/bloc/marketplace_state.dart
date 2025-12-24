@@ -12,6 +12,7 @@ class MarketplaceState extends Equatable {
   final bool isLoadingMore;
   final bool hasReachedEnd;
   final String? toast;
+  final Set<String> bookmarkedIds;
 
   const MarketplaceState({
     required this.loading,
@@ -24,6 +25,7 @@ class MarketplaceState extends Equatable {
     this.isLoadingMore = false,
     this.hasReachedEnd = false,
     this.toast,
+    this.bookmarkedIds = const {},
   });
 
   static const Object _unset = Object();
@@ -39,6 +41,7 @@ class MarketplaceState extends Equatable {
     bool? isLoadingMore,
     bool? hasReachedEnd,
     String? toast,
+    Set<String>? bookmarkedIds,
   }) {
     return MarketplaceState(
       loading: loading ?? this.loading,
@@ -53,6 +56,7 @@ class MarketplaceState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasReachedEnd: hasReachedEnd ?? this.hasReachedEnd,
       toast: toast ?? this.toast,
+      bookmarkedIds: bookmarkedIds ?? this.bookmarkedIds,
     );
   }
 
@@ -68,5 +72,6 @@ class MarketplaceState extends Equatable {
         isLoadingMore,
         hasReachedEnd,
         toast,
+        bookmarkedIds,
       ];
 }

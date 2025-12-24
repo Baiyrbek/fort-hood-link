@@ -4,6 +4,8 @@ import '../../../../di/marketplace_dependencies.dart';
 import '../../bloc/marketplace_event.dart';
 import 'marketplace_home_page.dart';
 import 'sell_page.dart';
+import 'categories_page.dart';
+import 'bookmarks_page.dart';
 import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,23 +18,34 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  void switchToSellTab() {
-    setState(() {
-      _currentIndex = 1;
-    });
-  }
-
-  List<Widget> get _pages => [
-        MarketplaceHomePage(
-          onNavigateToSell: switchToSellTab,
-        ),
-        SellPage(
+  void _navigateToSell() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SellPage(
           onPosted: () {
+            Navigator.pop(context);
             setState(() {
               _currentIndex = 0;
             });
           },
         ),
+      ),
+    );
+  }
+
+  List<Widget> get _pages => [
+        MarketplaceHomePage(
+          onNavigateToSell: _navigateToSell,
+        ),
+        CategoriesPage(
+          onCategorySelected: () {
+            setState(() {
+              _currentIndex = 0;
+            });
+          },
+        ),
+        const BookmarksPage(),
         const ProfilePage(),
       ];
 
@@ -43,8 +56,15 @@ class _HomePageState extends State<HomePage> {
         ..add(const LoadListings()),
       child: Scaffold(
         body: _pages[_currentIndex],
+        floatingActionButton: FloatingActionButton(
+          onPressed: _navigateToSell,
+          child: const Icon(Icons.add),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
@@ -56,8 +76,12 @@ class _HomePageState extends State<HomePage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.sell),
-            label: 'Sell',
+            icon: Icon(Icons.category),
+            label: 'Categories',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark),
+            label: 'Saved',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

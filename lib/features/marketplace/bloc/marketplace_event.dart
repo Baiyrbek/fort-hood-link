@@ -59,3 +59,16 @@ class LoadMoreRequested extends MarketplaceEvent {
 class ToastConsumed extends MarketplaceEvent {
   const ToastConsumed();
 }
+
+class LoadBookmarks extends MarketplaceEvent {
+  const LoadBookmarks();
+}
+
+class ToggleBookmark extends MarketplaceEvent {
+  final String listingId;
+
+  const ToggleBookmark(this.listingId);
+
+  @override
+  List<Object?> get props => [listingId];
+}

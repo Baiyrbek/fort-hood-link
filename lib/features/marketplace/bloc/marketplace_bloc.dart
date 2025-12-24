@@ -23,6 +23,8 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<ClearLocalListings>(_onClearLocalListings);
     on<LoadMoreRequested>(_onLoadMoreRequested);
     on<ToastConsumed>(_onToastConsumed);
+    on<LoadBookmarks>(_onLoadBookmarks);
+    on<ToggleBookmark>(_onToggleBookmark);
   }
 
   Future<void> _onLoadListings(
@@ -37,6 +39,7 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
 
     try {
       final listings = await repository.fetchListings();
+      final bookmarks = await repository.loadBookmarks();
       final filteredListings = _filterListings(
         listings,
         state.query,
@@ -49,6 +52,7 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
         loadedCount: _pageSize,
         hasReachedEnd: false,
         isLoadingMore: false,
+        bookmarkedIds: bookmarks,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -244,6 +248,28 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     Emitter<MarketplaceState> emit,
   ) {
     emit(state.copyWith(toast: null));
+  }
+
+  Future<void> _onLoadBookmarks(
+    LoadBookmarks event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    final bookmarks = await repository.loadBookmarks();
+    emit(state.copyWith(bookmarkedIds: bookmarks));
+  }
+
+  Future<void> _onToggleBookmark(
+    ToggleBookmark event,
+    Emitter<MarketplaceState> emit,
+  ) async {
+    final updatedBookmarks = Set<String>.from(state.bookmarkedIds);
+    if (updatedBookmarks.contains(event.listingId)) {
+      updatedBookmarks.remove(event.listingId);
+    } else {
+      updatedBookmarks.add(event.listingId);
+    }
+    await repository.saveBookmarks(updatedBookmarks);
+    emit(state.copyWith(bookmarkedIds: updatedBookmarks));
   }
 
   List<Listing> _filterListings(

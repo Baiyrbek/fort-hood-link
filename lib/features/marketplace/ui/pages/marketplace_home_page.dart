@@ -92,6 +92,13 @@ class _MarketplaceHomePageState extends State<MarketplaceHomePage> {
             }
           });
         }
+        if (previous.selectedCategory != current.selectedCategory) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _scrollToTop();
+            }
+          });
+        }
         return false;
       },
       listener: (context, state) {},

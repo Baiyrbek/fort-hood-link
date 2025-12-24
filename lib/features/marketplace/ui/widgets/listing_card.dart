@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../bloc/marketplace_bloc.dart';
+import '../../bloc/marketplace_event.dart';
+import '../../bloc/marketplace_state.dart';
 import '../../data/models/listing.dart';
 import '../pages/listing_details_page.dart';
 
@@ -71,6 +75,38 @@ class ListingCard extends StatelessWidget {
                             color: Colors.grey[300],
                             child: const Icon(Icons.image_not_supported),
                           ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: BlocBuilder<MarketplaceBloc, MarketplaceState>(
+                      builder: (context, state) {
+                        final isBookmarked = state.bookmarkedIds.contains(listing.id);
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              context.read<MarketplaceBloc>().add(
+                                    ToggleBookmark(listing.id),
+                                  );
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.4),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   Positioned(
                     bottom: 8,

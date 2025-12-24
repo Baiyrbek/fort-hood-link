@@ -4,6 +4,7 @@ import '../models/listing.dart';
 
 class MarketplaceRepository {
   static const String _key = 'marketplace_listings_v1';
+  static const String _bookmarksKey = 'marketplace_bookmarks_v1';
 
   List<Listing> _getSeedListings() {
     return [
@@ -160,5 +161,16 @@ class MarketplaceRepository {
   Future<void> clearListings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
+  }
+
+  Future<Set<String>> loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarksList = prefs.getStringList(_bookmarksKey);
+    return bookmarksList?.toSet() ?? <String>{};
+  }
+
+  Future<void> saveBookmarks(Set<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_bookmarksKey, ids.toList());
   }
 }
